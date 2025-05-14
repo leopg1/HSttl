@@ -1,0 +1,22 @@
+sensors:
+  # Configurare pini GPIO pentru senzori
+  hall_sensor_pin: 17          # Pin GPIO pentru senzorul Hall (KY-024)
+  vibration_sensor_pin: 27     # Pin GPIO pentru senzorul de vibrații (SW-420)
+  alcohol_sensor_pin: 22       # Pin GPIO pentru senzorul de alcool (MQ-3)
+  
+  # Configurare LED și buzzer
+  led_pin_r: 18                # Pin GPIO pentru LED roșu
+  led_pin_g: 23                # Pin GPIO pentru LED verde
+  led_pin_b: 24                # Pin GPIO pentru LED albastru
+  buzzer_pin: 25               # Pin GPIO pentru buzzer
+  
+  # Praguri și setări pentru senzori
+  alcohol_threshold: 400       # Pragul pentru detectarea alcoolului (valoare analogică)
+  vibration_threshold: 800     # Pragul pentru detectarea vibrațiilor
+  hall_debounce_time: 300      # Timp de debounce pentru senzorul Hall (ms)
+  vibration_debounce_time: 100 # Timp de debounce pentru senzorul de vibrații (ms)
+  
+  # Parametri pentru senzorul ultrasonic (HC-SR04)
+  ultrasonic_trigger_pin: 20   # Pin GPIO pentru trigger
+  ultrasonic_echo_pin: 21      # Pin GPIO pentru echo
+  ultrasonic_max_distance: 3.0 # Distanța maximă de măsurare (m)

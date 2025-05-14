@@ -1,0 +1,11 @@
+lidar:
+  angle_min: -2.35619  # ~ -135 grade
+  angle_max: 2.35619   # ~ 135 grade
+  range_min: 0.15      # Distanța minimă de măsurare (m)
+  range_max: 5.0       # Distanța maximă de măsurare (m)
+  scan_time: 0.1       # Timp pentru un scan complet (s)
+  
+  # Parametri specifici pentru STL 19P LDRBOT
+  max_distance: 6.0    # Distanța maximă garantată (m)
+  point_cloud_size: 360 # Numărul de puncte per scan
+  frame_id: "laser_frame"
