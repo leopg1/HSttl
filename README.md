@@ -1,56 +1,56 @@
 # 基于超声波传感器的智能机器人系统技术文档
-# Documentație Tehnică - Sistem Robotizat bazat pe Senzori Ultrasonici
+# Technical Documentation - Robotized System based on Ultrasonic Sensors
 
-## 目录 / Cuprins
+## 目录 / Contents
 
-1. [系统概述 / Prezentare generală a sistemului](#1-系统概述--prezentare-generală-a-sistemului)
-2. [硬件架构 / Arhitectura hardware](#2-硬件架构--arhitectura-hardware)
-3. [软件架构 / Arhitectura software](#3-软件架构--arhitectura-software)
-4. [ROS2节点通信 / Comunicarea nodurilor ROS2](#4-ros2节点通信--comunicarea-nodurilor-ros2)
-5. [导航算法 / Algoritmul de navigare](#5-导航算法--algoritmul-de-navigare)
-6. [数据流 / Fluxul de date](#6-数据流--fluxul-de-date)
-7. [系统优化 / Optimizări ale sistemului](#7-系统优化--optimizări-ale-sistemului)
-8. [实施和测试 / Implementare și testare](#8-实施和测试--implementare-și-testare)
-9. [扩展方向 / Direcții de extindere](#9-扩展方向--direcții-de-extindere)
+1. [系统概述 / System Overview](#1-系统概述--system-overview)
+2. [硬件架构 / Hardware Architecture](#2-硬件架构--hardware-architecture)
+3. [软件架构 / Software Architecture](#3-软件架构--software-architecture)
+4. [ROS2节点通信 / ROS2 Node Communication](#4-ros2节点通信--ros2-node-communication)
+5. [导航算法 / Navigation Algorithm](#5-导航算法--navigation-algorithm)
+6. [数据流 / Data Flow](#6-数据流--data-flow)
+7. [系统优化 / System Optimizations](#7-系统优化--system-optimizations)
+8. [实施和测试 / Implementation and Testing](#8-实施和测试--implementation-and-testing)
+9. [扩展方向 / Expansion Directions](#9-扩展方向--expansion-directions)
 
-## 1. 系统概述 / Prezentare generală a sistemului
+## 1. 系统概述 / System Overview
 
-Sistemul implementat reprezintă un robot autonom capabil să navigheze prin labirinturi și spații complexe folosind exclusiv senzori ultrasonici pentru detectarea obstacolelor. Arhitectura sistemului este distribuită pe două componente principale care comunică prin socket TCP/IP:
+The implemented system represents an autonomous robot capable of navigating through mazes and complex spaces using exclusively ultrasonic sensors for obstacle detection. The system architecture is distributed across two main components that communicate through TCP/IP socket:
 
-- **树莓派服务器 / Serverul Raspberry Pi**: Colectează date de la senzorii ultrasonici și le transmite către clientul ROS2
-- **ROS2客户端 / Clientul ROS2**: Procesează datele primite și implementează algoritmul de navigare pentru controlul robotului
+- **树莓派服务器 / Raspberry Pi Server**: Collects data from ultrasonic sensors and transmits it to the ROS2 client
+- **ROS2客户端 / ROS2 Client**: Processes the received data and implements the navigation algorithm for robot control
 
-Această abordare distribuită permite separarea clară a responsabilităților: Raspberry Pi se ocupă de interacțiunea cu senzorii hardware, în timp ce nodurile ROS2 implementează logica de navigare și controlul robotului, oferind un sistem modular și extindibil.
+This distributed approach allows for a clear separation of responsibilities: Raspberry Pi handles the interaction with hardware sensors, while ROS2 nodes implement the navigation logic and robot control, providing a modular and extensible system.
 
-## 2. 硬件架构 / Arhitectura hardware
+## 2. 硬件架构 / Hardware Architecture
 
-Sistemul utilizează următoarele componente hardware:
+The system uses the following hardware components:
 
-### 2.1 传感器系统 / Sistemul de senzori
-- **4个超声波传感器 / 4 Senzori ultrasonici**:
-  - Senzor frontal: pentru detectarea obstacolelor în fața robotului
-  - Senzor stânga: pentru detectarea obstacolelor în lateral-stânga
-  - Senzor dreapta: pentru detectarea obstacolelor în lateral-dreapta
-  - Senzor spate: pentru detectarea obstacolelor în spatele robotului
+### 2.1 传感器系统 / Sensor System
+- **4个超声波传感器 / 4 Ultrasonic Sensors**:
+  - Front sensor: for detecting obstacles in front of the robot
+  - Left sensor: for detecting obstacles to the left side
+  - Right sensor: for detecting obstacles to the right side
+  - Rear sensor: for detecting obstacles behind the robot
 
-### 2.2 计算平台 / Platforme de calcul
+### 2.2 计算平台 / Computing Platforms
 - **树莓派 / Raspberry Pi**:
-  - Gestionează senzorii ultrasonici
-  - Rulează serverul pentru transmiterea datelor
-  - Conectat la pinii GPIO specificați pentru fiecare senzor
+  - Manages the ultrasonic sensors
+  - Runs the server for data transmission
+  - Connected to specified GPIO pins for each sensor
   
-- **ROS2主机 / Sistemul gazdă ROS2**:
-  - Rulează nodurile ROS2
-  - Implementează logica de navigare
-  - Comunică cu Raspberry Pi prin rețea
+- **ROS2主机 / ROS2 Host System**:
+  - Runs the ROS2 nodes
+  - Implements the navigation logic
+  - Communicates with Raspberry Pi through the network
 
-### 2.3 执行器 / Actuatorii
-- **差速驱动系统 / Sistem de acționare diferențială**:
-  - Motoare pentru deplasare înainte/înapoi
-  - Motoare pentru deplasare laterală stânga/dreapta
-  - Sistem de rotație pentru schimbarea orientării
+### 2.3 执行器 / Actuators
+- **差速驱动系统 / Differential Drive System**:
+  - Motors for forward/backward movement
+  - Motors for left/right lateral movement
+  - Rotation system for changing orientation
 
-### 2.4 连接图 / Schema conexiunilor
+### 2.4 连接图 / Connection Diagram
 
 ```
 +-----------------+        TCP/IP        +------------------+
@@ -71,78 +71,78 @@ Sistemul utilizează următoarele componente hardware:
 +-----------------------------------+
 ```
 
-## 3. 软件架构 / Arhitectura software
+## 3. 软件架构 / Software Architecture
 
-Arhitectura software este modularizată pentru a separa diferite responsabilități:
+The software architecture is modularized to separate different responsibilities:
 
-### 3.1 树莓派服务器软件 / Software-ul server de pe Raspberry Pi
+### 3.1 树莓派服务器软件 / Raspberry Pi Server Software
 
-Serverul Raspberry Pi (`ultrasonic_server.py`) implementează următoarele funcționalități:
+The Raspberry Pi server (`ultrasonic_server.py`) implements the following functionalities:
 
-- **传感器初始化 / Inițializarea senzorilor**:
-  - Configurarea senzorilor ultrasonici pe pinii GPIO specificați
-  - Setarea parametrilor de funcționare
+- **传感器初始化 / Sensor Initialization**:
+  - Configuration of ultrasonic sensors on the specified GPIO pins
+  - Setting of operating parameters
 
-- **数据采集 / Achiziția datelor**:
-  - Citirea continuă a valorilor de la toți cei 4 senzori ultrasonici
-  - Conversia valorilor în centimetri
+- **数据采集 / Data Acquisition**:
+  - Continuous reading of values from all 4 ultrasonic sensors
+  - Conversion of values to centimeters
 
-- **数据滤波 / Filtrarea datelor**:
-  - Implementarea unui filtru trece-jos (low-pass filter) pentru netezirea valorilor
-  - Reducerea zgomotului și a valorilor aberante
-  - Factor de filtrare configurat pentru echilibrul între reactivitate și stabilitate
+- **数据滤波 / Data Filtering**:
+  - Implementation of a low-pass filter for smoothing values
+  - Reduction of noise and outlier values
+  - Filtering factor configured for balance between reactivity and stability
 
-- **服务器通信 / Comunicarea server**:
-  - Servirea conexiunilor TCP pe portul 5000
-  - Serializarea datelor în format JSON
-  - Transmiterea datelor actualizate când sunt detectate schimbări semnificative
+- **服务器通信 / Server Communication**:
+  - Serving TCP connections on port 5000
+  - Serialization of data in JSON format
+  - Transmission of updated data when significant changes are detected
 
-### 3.2 ROS2客户端软件 / Software-ul client ROS2
+### 3.2 ROS2客户端软件 / ROS2 Client Software
 
-Clientul ROS2 (`robot_ultrasonic_client.py`) implementează:
+The ROS2 client (`robot_ultrasonic_client.py`) implements:
 
-- **ROS2节点初始化 / Inițializarea nodurilor ROS2**:
-  - Crearea nodului 'robot_controller'
-  - Configurarea publicatorilor pentru comandarea mișcării (`/controller/cmd_vel`)
-  - Configurarea subscriberilor pentru date IMU și odometrie
+- **ROS2节点初始化 / ROS2 Node Initialization**:
+  - Creation of the 'robot_controller' node
+  - Configuration of publishers for movement commands (`/controller/cmd_vel`)
+  - Configuration of subscribers for IMU and odometry data
 
-- **TCP客户端 / Clientul TCP**:
-  - Conectarea la serverul Raspberry Pi
-  - Recepționarea și deserializarea datelor JSON
-  - Actualizarea stării senzorilor în memorie
+- **TCP客户端 / TCP Client**:
+  - Connecting to the Raspberry Pi server
+  - Receiving and deserializing JSON data
+  - Updating sensor status in memory
 
-- **状态机导航系统 / Sistemul de navigare bazat pe mașină de stare**:
-  - Implementarea unui sistem cu 6 stări principale
-  - Logica de decizie bazată pe valorile senzorilor
-  - Algoritmul de evitare a buclelor
+- **状态机导航系统 / State Machine Navigation System**:
+  - Implementation of a system with 6 main states
+  - Decision logic based on sensor values
+  - Loop avoidance algorithm
 
-- **运动控制 / Controlul mișcării**:
-  - Generarea mesajelor `Twist` pentru controlul robotului
-  - Ajustarea vitezei liniare și unghiulare în funcție de mediu
-  - Strategii de recuperare pentru situații blocate
+- **运动控制 / Movement Control**:
+  - Generation of `Twist` messages for robot control
+  - Adjustment of linear and angular velocity based on environment
+  - Recovery strategies for blocked situations
 
-## 4. ROS2节点通信 / Comunicarea nodurilor ROS2
+## 4. ROS2节点通信 / ROS2 Node Communication
 
-Sistemul utilizează infrastructura ROS2 pentru comunicarea între componente:
+The system uses the ROS2 infrastructure for communication between components:
 
-### 4.1 发布的主题 / Topicuri publicate
+### 4.1 发布的主题 / Published Topics
 - **/controller/cmd_vel (geometry_msgs/Twist)**:
-  - Comenzi de viteză liniară și unghiulară pentru controlul robotului
-  - Publicate de nodul `robot_controller`
-  - Rate de publicare: 5Hz (la fiecare 0.2 secunde)
+  - Linear and angular velocity commands for robot control
+  - Published by the `robot_controller` node
+  - Publication rate: 5Hz (every 0.2 seconds)
 
-### 4.2 订阅的主题 / Topicuri la care se face subscribe
+### 4.2 订阅的主题 / Subscribed Topics
 - **/imu (sensor_msgs/Imu)**:
-  - Date de orientare de la unitatea de măsură inerțială (IMU)
-  - Utilizate pentru a determina orientarea curentă a robotului
-  - Procesate pentru a extrage unghiul yaw (rotație în jurul axei z)
+  - Orientation data from the inertial measurement unit (IMU)
+  - Used to determine the current orientation of the robot
+  - Processed to extract the yaw angle (rotation around the z-axis)
 
 - **/odom_raw (nav_msgs/Odometry)**:
-  - Date de odometrie pentru poziția și viteza robotului
-  - Utilizate pentru a monitoriza deplasarea robotului
-  - Importante pentru detectarea blocajelor și analiza comportamentului
+  - Odometry data for robot position and velocity
+  - Used to monitor robot movement
+  - Important for detecting blockages and analyzing behavior
 
-### 4.3 节点关系图 / Diagrama relațiilor între noduri
+### 4.3 节点关系图 / Node Relationship Diagram
 
 ```
 +-------------------+
@@ -165,96 +165,96 @@ subscribe |      publish
                  +-------------+
 ```
 
-### 4.4 参数配置 / Configurarea parametrilor
-- **导航参数 / Parametri de navigare**:
-  - `min_wall_dist`: 15.0 cm - distanța minimă față de orice perete
-  - `max_wall_dist`: 30.0 cm - distanța maximă pentru a considera că există perete
-  - `exit_detection_dist`: 60.0 cm - distanță pentru detectarea ieșirii/spațiu deschis
+### 4.4 参数配置 / Parameter Configuration
+- **导航参数 / Navigation Parameters**:
+  - `min_wall_dist`: 15.0 cm - minimum distance from any wall
+  - `max_wall_dist`: 30.0 cm - maximum distance to consider a wall exists
+  - `exit_detection_dist`: 60.0 cm - distance for exit/open space detection
 
-- **运动参数 / Parametri de mișcare**:
-  - `forward_speed`: 0.08 m/s - viteza înainte normală
-  - `rotation_speed`: 0.25 rad/s - viteza de rotație de bază
-  - `lateral_speed`: 0.07 m/s - viteza laterală de bază
-  - `rotation_tolerance`: 3.0 grade - toleranță pentru rotația completă
+- **运动参数 / Movement Parameters**:
+  - `forward_speed`: 0.08 m/s - normal forward speed
+  - `rotation_speed`: 0.25 rad/s - base rotation speed
+  - `lateral_speed`: 0.07 m/s - base lateral speed
+  - `rotation_tolerance`: 3.0 degrees - tolerance for complete rotation
 
-## 5. 导航算法 / Algoritmul de navigare
+## 5. 导航算法 / Navigation Algorithm
 
-Algoritmul de navigare implementează o mașină de stare complexă care permite robotului să exploreze medii necunoscute și să evite obstacolele.
+The navigation algorithm implements a complex state machine that allows the robot to explore unknown environments and avoid obstacles.
 
-### 5.1 状态机 / Mașina de stare
-Sistemul utilizează 6 stări principale:
+### 5.1 状态机 / State Machine
+The system uses 6 main states:
 
-1. **EVALUATE**: Robotul se oprește și evaluează toate direcțiile posibile
-2. **MOVE_FORWARD**: Deplasare înainte când calea este liberă
-3. **MOVE_LEFT**: Deplasare laterală stânga când frontul este blocat dar stânga este liberă
-4. **MOVE_RIGHT**: Deplasare laterală dreapta când frontul este blocat dar dreapta este liberă
-5. **MOVE_BACKWARD**: Deplasare înapoi când toate direcțiile frontale sunt blocate
-6. **RECOVERY**: Strategie de recuperare când robotul este complet blocat
+1. **EVALUATE**: The robot stops and evaluates all possible directions
+2. **MOVE_FORWARD**: Forward movement when the path is clear
+3. **MOVE_LEFT**: Lateral movement to the left when the front is blocked but the left is clear
+4. **MOVE_RIGHT**: Lateral movement to the right when the front is blocked but the right is clear
+5. **MOVE_BACKWARD**: Backward movement when all frontal directions are blocked
+6. **RECOVERY**: Recovery strategy when the robot is completely blocked
 
-### 5.2 决策逻辑 / Logica decizională
-Algoritmul folosește următoarea logică pentru a decide tranzițiile între stări:
+### 5.2 决策逻辑 / Decision Logic
+The algorithm uses the following logic to decide transitions between states:
 
 ```
-În starea EVALUATE:
+In the EVALUATE state:
     IF front_distance > min_wall_dist THEN
-        Trecere la MOVE_FORWARD
+        Transition to MOVE_FORWARD
     ELSE IF left_distance > right_distance AND left_distance > min_wall_dist THEN
-        Trecere la MOVE_LEFT
+        Transition to MOVE_LEFT
     ELSE IF right_distance > left_distance AND right_distance > min_wall_dist THEN
-        Trecere la MOVE_RIGHT
+        Transition to MOVE_RIGHT
     ELSE IF rear_distance > min_wall_dist THEN
-        Trecere la MOVE_BACKWARD
+        Transition to MOVE_BACKWARD
     ELSE
-        Trecere la RECOVERY
+        Transition to RECOVERY
 ```
 
-### 5.3 循环检测 / Detectarea buclelor
-Un aspect inovativ al algoritmului este capacitatea de a detecta și evita buclele - situații în care robotul oscilează între aceleași mișcări:
+### 5.3 循环检测 / Loop Detection
+An innovative aspect of the algorithm is the ability to detect and avoid loops - situations where the robot oscillates between the same movements:
 
-- Stocarea istoricului ultimelor decizii (maximum 10)
-- Detectarea oscilațiilor între stări (prag setat la 2 oscilații)
-- Când este detectată o buclă, robotul forțează o strategie diferită:
-  - Preferă deplasarea înapoi pentru a ieși din buclă
-  - Resetează istoricul deciziilor după ieșirea din buclă
-  - Poate reduce temporar cerințele de distanță minimă pentru a găsi o ieșire
+- Storing the history of the last decisions (maximum 10)
+- Detecting oscillations between states (threshold set at 2 oscillations)
+- When a loop is detected, the robot forces a different strategy:
+  - Prefers backward movement to exit the loop
+  - Resets the decision history after exiting the loop
+  - Can temporarily reduce the minimum distance requirements to find an exit
 
-### 5.4 恢复策略 / Strategia de recuperare
-Când robotul ajunge într-o situație de blocaj, starea RECOVERY implementează:
+### 5.4 恢复策略 / Recovery Strategy
+When the robot reaches a deadlock situation, the RECOVERY state implements:
 
-- Identificarea direcției cu cel mai mult spațiu disponibil
-- Încercarea de a efectua o micro-mișcare în acea direcție
-- Dacă situația persistă, poate încerca o rotație pentru schimbarea orientării
-- Mecanisme de timeout pentru a preveni blocajele infinite
+- Identifying the direction with the most available space
+- Attempting to perform a micro-movement in that direction
+- If the situation persists, it may try a rotation to change orientation
+- Timeout mechanisms to prevent infinite blockages
 
-## 6. 数据流 / Fluxul de date
+## 6. 数据流 / Data Flow
 
-Fluxul de date în sistem urmează un traseu bine definit:
+The data flow in the system follows a well-defined path:
 
-### 6.1 传感器数据流 / Fluxul datelor de la senzori
-
-```
-Senzori Ultrasonici --> GPIO Raspberry Pi --> Citire distanțe --> Filtrare date
---> Formare pachet JSON --> Socket TCP --> Deserializare în client ROS2
---> Actualizare stare internă în robot_controller
-```
-
-### 6.2 控制数据流 / Fluxul datelor de control
+### 6.1 传感器数据流 / Sensor Data Flow
 
 ```
-Algoritmul de navigare --> Decizia stării --> Calculul vitezelor
---> Publicare mesaj Twist pe /controller/cmd_vel --> Driver motoare
---> Acționare fizică a roboților
+Ultrasonic Sensors --> GPIO Raspberry Pi --> Distance Reading --> Data Filtering
+--> JSON Packet Formation --> TCP Socket --> Deserialization in ROS2 client
+--> Internal state update in robot_controller
 ```
 
-### 6.3 反馈数据流 / Fluxul datelor de feedback
+### 6.2 控制数据流 / Control Data Flow
 
 ```
-IMU --> /imu topic --> Subscribtion în robot_controller --> Actualizare orientare
-Encodere --> Odometrie --> /odom_raw topic --> Verificare poziție și deplasare
+Navigation Algorithm --> State Decision --> Speed Calculation
+--> Publishing Twist message on /controller/cmd_vel --> Motor Drivers
+--> Physical Actuation of the robots
 ```
 
-### 6.4 数据结构 / Structuri de date
-Informația este transmisă în format JSON între server și client:
+### 6.3 反馈数据流 / Feedback Data Flow
+
+```
+IMU --> /imu topic --> Subscription in robot_controller --> Orientation Update
+Encoders --> Odometry --> /odom_raw topic --> Position and Movement Verification
+```
+
+### 6.4 数据结构 / Data Structures
+Information is transmitted in JSON format between server and client:
 
 ```json
 {
@@ -266,107 +266,107 @@ Informația este transmisă în format JSON între server și client:
 }
 ```
 
-## 7. 系统优化 / Optimizări ale sistemului
+## 7. 系统优化 / System Optimizations
 
-Sistemul include multiple optimizări pentru creșterea performanței și fiabilității:
+The system includes multiple optimizations to increase performance and reliability:
 
-### 7.1 传感器数据优化 / Optimizarea datelor de la senzori
-- **低通滤波 / Filtru trece-jos (low-pass filter)**:
+### 7.1 传感器数据优化 / Sensor Data Optimization
+- **低通滤波 / Low-pass Filter**:
   ```python
   filtered_value = filtering_factor * previous_value + (1 - filtering_factor) * current_value
   ```
-  - Reduce zgomotul și variațiile bruște
-  - Factor de filtrare 0.7 (echilibru între stabilitate și reactivitate)
+  - Reduces noise and sudden variations
+  - Filtering factor 0.7 (balance between stability and reactivity)
 
-- **变化检测 / Detectarea schimbărilor**:
-  - Transmiterea datelor doar când există o schimbare semnificativă (> 0.5 cm)
-  - Reduce traficul de rețea și utilizarea procesorului
+- **变化检测 / Change Detection**:
+  - Transmitting data only when there is a significant change (> 0.5 cm)
+  - Reduces network traffic and processor usage
 
-### 7.2 通信优化 / Optimizarea comunicațiilor
-- **缓冲区管理 / Gestiunea buffer-ului**:
-  - Procesarea incrementală a datelor primite
-  - Separarea pachetelor complete de date pe baza separatorului newline
-  - Tratarea erorilor de comunicație cu reîncercări automate
+### 7.2 通信优化 / Communication Optimization
+- **缓冲区管理 / Buffer Management**:
+  - Incremental processing of received data
+  - Separation of complete data packets based on newline separator
+  - Handling communication errors with automatic retries
 
-- **连接恢复 / Recuperarea conexiunii**:
-  - Detectarea deconectărilor
-  - Reîncercări automate la fiecare 5 secunde
-  - Gestionarea erorilor de conexiune
+- **连接恢复 / Connection Recovery**:
+  - Detection of disconnections
+  - Automatic retries every 5 seconds
+  - Managing connection errors
 
-### 7.3 导航优化 / Optimizarea navigației
-- **状态转换平滑化 / Netezirea tranzițiilor între stări**:
-  - Oprirea completă înainte de schimbarea direcției
-  - Evaluarea completă a opțiunilor înainte de a decide
+### 7.3 导航优化 / Navigation Optimization
+- **状态转换平滑化 / Smoothing State Transitions**:
+  - Complete stop before changing direction
+  - Full evaluation of options before making a decision
 
-- **避免振荡 / Evitarea oscilațiilor**:
-  - Detecția tiparelor de oscilație în istoricul deciziilor
-  - Forțarea unor decizii alternative pentru ieșirea din buclă
+- **避免振荡 / Avoiding Oscillations**:
+  - Detection of oscillation patterns in the decision history
+  - Forcing alternative decisions to exit loops
 
-- **安全特性 / Caracteristici de siguranță**:
-  - Verificarea expirării datelor de la senzori (timeout de 2 secunde)
-  - Oprirea automată în caz de date expirate sau erori
+- **安全特性 / Safety Features**:
+  - Checking for expired sensor data (2-second timeout)
+  - Automatic stop in case of expired data or errors
 
-## 8. 实施和测试 / Implementare și testare
+## 8. 实施和测试 / Implementation and Testing
 
-### 8.1 部署步骤 / Pași de implementare
-1. **配置树莓派 / Configurarea Raspberry Pi**:
-   - Instalarea bibliotecilor necesare (`gpiozero`, etc.)
-   - Conectarea senzorilor la pinii GPIO specifici
-   - Rularea scriptului `ultrasonic_server.py`
+### 8.1 部署步骤 / Implementation Steps
+1. **配置树莓派 / Raspberry Pi Configuration**:
+   - Installation of necessary libraries (`gpiozero`, etc.)
+   - Connecting sensors to specific GPIO pins
+   - Running the `ultrasonic_server.py` script
 
-2. **配置ROS2环境 / Configurarea mediului ROS2**:
-   - Instalarea ROS2 și pachetelor necesare
-   - Configurarea spațiului de lucru ROS2
-   - Construirea și rularea nodului `robot_controller`
+2. **配置ROS2环境 / ROS2 Environment Configuration**:
+   - Installation of ROS2 and required packages
+   - Configuration of the ROS2 workspace
+   - Building and running the `robot_controller` node
 
-3. **系统集成 / Integrarea sistemului**:
-   - Asigurarea conectivității rețea între Raspberry Pi și sistemul ROS2
-   - Verificarea publicării și subscripției la topicurile necesare
-   - Testarea comunicației socket între cele două componente
+3. **系统集成 / System Integration**:
+   - Ensuring network connectivity between Raspberry Pi and the ROS2 system
+   - Verifying publishing and subscription to necessary topics
+   - Testing socket communication between the two components
 
-### 8.2 测试方法 / Metode de testare
-- **传感器测试 / Testarea senzorilor**:
-  - Verificarea acurateței măsurătorilor
-  - Calibrarea și ajustarea factorilor de filtrare
+### 8.2 测试方法 / Testing Methods
+- **传感器测试 / Sensor Testing**:
+  - Verification of measurement accuracy
+  - Calibration and adjustment of filtering factors
 
-- **导航算法测试 / Testarea algoritmului de navigare**:
-  - Teste în labirinturi de complexități diferite
-  - Verificarea evitării buclelor și a comportamentului de recuperare
+- **导航算法测试 / Navigation Algorithm Testing**:
+  - Tests in mazes of different complexities
+  - Verification of loop avoidance and recovery behavior
 
-- **长时间运行测试 / Teste de funcționare îndelungată**:
-  - Evaluarea stabilității sistemului în timp
-  - Detectarea și corectarea eventualelor scurgeri de memorie sau probleme de performanță
+- **长时间运行测试 / Long-term Operation Tests**:
+  - Evaluation of system stability over time
+  - Detection and correction of potential memory leaks or performance issues
 
-### 8.3 性能指标 / Indicatori de performanță
-- **反应时间 / Timpul de reacție**: < 200ms de la detecția obstacolului până la decizia de evitare
-- **导航成功率 / Rata de succes a navigării**: > 95% în labirinturi de complexitate medie
-- **循环检测效率 / Eficiența detectării buclelor**: Detectează și evită > 90% din situațiile de buclă potențiale
-- **连接稳定性 / Stabilitatea conexiunii**: < 1% rate de deconectare în operare normală
+### 8.3 性能指标 / Performance Indicators
+- **反应时间 / Reaction Time**: < 200ms from obstacle detection to avoidance decision
+- **导航成功率 / Navigation Success Rate**: > 95% in medium complexity mazes
+- **循环检测效率 / Loop Detection Efficiency**: Detects and avoids > 90% of potential loop situations
+- **连接稳定性 / Connection Stability**: < 1% disconnection rate in normal operation
 
-## 9. 扩展方向 / Direcții de extindere
+## 9. 扩展方向 / Expansion Directions
 
-Sistemul a fost proiectat să fie modular și extindibil. Iată câteva direcții de dezvoltare viitoare:
+The system was designed to be modular and extensible. Here are some future development directions:
 
-### 9.1 传感器增强 / Îmbunătățirea senzorilor
-- Adăugarea de senzori suplimentari (LIDAR, camere, etc.)
-- Implementarea fuziunii de date pentru o percepție mai robustă a mediului
-- Integrarea senzorilor de proximitate pentru detecția precisă a obiectelor mici
+### 9.1 传感器增强 / Sensor Improvement
+- Adding additional sensors (LIDAR, cameras, etc.)
+- Implementing data fusion for a more robust perception of the environment
+- Integration of proximity sensors for precise detection of small objects
 
-### 9.2 算法改进 / Îmbunătățirea algoritmilor
-- Implementarea algoritmilor de cartografiere simultană și localizare (SLAM)
-- Adăugarea planificării traiectoriei utilizând tehnici avansate (A*, RRT)
-- Integrarea algoritmilor de învățare automată pentru adaptarea la diferite medii
+### 9.2 算法改进 / Algorithm Improvement
+- Implementation of simultaneous localization and mapping algorithms (SLAM)
+- Adding trajectory planning using advanced techniques (A*, RRT)
+- Integration of machine learning algorithms for adaptation to different environments
 
-### 9.3 系统集成 / Integrarea sistemelor
-- Integrarea cu sistemul de navigație Nav2 din ROS2
-- Implementarea unei interfețe de monitorizare și control la distanță
-- Adăugarea de capacități de telemetrie și diagnosticare avansată
+### 9.3 系统集成 / System Integration
+- Integration with the Nav2 navigation system from ROS2
+- Implementation of a remote monitoring and control interface
+- Adding advanced telemetry and diagnostic capabilities
 
-### 9.4 应用扩展 / Extinderea aplicațiilor
-- Adaptarea pentru sarcini de livrare autonomă
-- Configurarea pentru inspecții automate în medii industriale
-- Utilizarea în scenarii de căutare și salvare
+### 9.4 应用扩展 / Application Extensions
+- Adaptation for autonomous delivery tasks
+- Configuration for automatic inspections in industrial environments
+- Use in search and rescue scenarios
 
 ---
 
-*Această documentație a fost elaborată pentru prezentarea sistemului robotizat bazat pe senzori ultrasonici cu algoritm de navigare în labirint. Toate drepturile rezervate © 2025*
+*This documentation was developed for the presentation of the robotized system based on ultrasonic sensors with maze navigation algorithm. All rights reserved © 2025*
